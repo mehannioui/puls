@@ -1,29 +1,26 @@
-# ShipFast — Build Status
+# Pulse — Build Status
 
-Update this file at the end of every Claude Code session.
-Check it at the start of every session before loading a task file.
+Update at the end of every session. Check at the start before opening a task file.
 
 ---
 
 ## Tasks
 
-| # | Task                  | Status    | Notes                        |
-|---|-----------------------|-----------|------------------------------|
-| 01 | Monorepo setup       | ⬜ pending |                              |
-| 02 | Database schema      | ⬜ pending |                              |
-| 03 | Go scaffold          | ⬜ pending |                              |
-| 04 | Supabase auth        | ⬜ pending |                              |
-| 05 | Nuxt scaffold        | ⬜ pending |                              |
-| 06 | Stripe billing       | ⬜ pending |                              |
-| 07 | River setup          | ⬜ pending |                              |
-| 08 | Job: Ingest          | ⬜ pending |                              |
-| 09 | Job: Parse           | ⬜ pending |                              |
-| 10 | Job: Analyze         | ⬜ pending |                              |
-| 11 | Job: Rebuild         | ⬜ pending | Core IP — allocate most time |
-| 12 | Job: Package         | ⬜ pending |                              |
-| 13 | Dashboard pages      | ⬜ pending |                              |
-| 14 | Realtime progress    | ⬜ pending |                              |
-| 15 | Admin section        | ⬜ pending |                              |
+| #  | Task                          | Status     | Notes                          |
+|----|-------------------------------|------------|--------------------------------|
+| 01 | Monorepo setup                | ✅ done     | Scaffold reused from prior work |
+| 02 | Database schema               | ✅ done     | 5 migrations, sqlc gen, RLS integration test |
+| 03 | Auth + orgs                   | ⬜ pending  | Supabase Auth + tenant context |
+| 04 | Services CRUD + dashboard     | ⬜ pending  | Add/list/edit monitored URLs   |
+| 05 | Check engine (worker)         | ⬜ pending  | River jobs, HTTP checks        |
+| 06 | Public status page (SSG)      | ⬜ pending  | Subdomain routing              |
+| 07 | Real-time dashboard (SSE)     | ⬜ pending  | Live updates + charts          |
+| 08 | Stripe billing                | ⬜ pending  | Free vs Pro tier enforcement   |
+
+Post-MVP (not yet scheduled):
+- 09 Incident management
+- 10 Email alerts (Resend)
+- 11 Custom domains
 
 ---
 
