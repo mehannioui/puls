@@ -26,6 +26,12 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/api/orgs", s.orgsHandler.ListOrgs)
 		r.Post("/api/orgs", s.orgsHandler.CreateOrg)
 		r.Post("/api/orgs/{id}/switch", s.orgsHandler.SwitchOrg)
+
+		r.Get("/api/services", s.servicesHandler.ListServices)
+		r.Post("/api/services", s.servicesHandler.CreateService)
+		r.Get("/api/services/{id}", s.servicesHandler.GetService)
+		r.Patch("/api/services/{id}", s.servicesHandler.UpdateService)
+		r.Delete("/api/services/{id}", s.servicesHandler.DeleteService)
 	})
 
 	return r

@@ -60,6 +60,27 @@ func (q *Queries) CreateOrg(ctx context.Context, arg CreateOrgParams) (Org, erro
 	return i, err
 }
 
+const getOrgByID = `-- name: GetOrgByID :one
+SELECT id, slug, name, plan, stripe_customer_id, created_at, updated_at
+FROM orgs
+WHERE id = $1
+`
+
+func (q *Queries) GetOrgByID(ctx context.Context, id uuid.UUID) (Org, error) {
+	row := q.db.QueryRowContext(ctx, getOrgByID, id)
+	var i Org
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Name,
+		&i.Plan,
+		&i.StripeCustomerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getOrgBySlug = `-- name: GetOrgBySlug :one
 SELECT id, slug, name, plan, stripe_customer_id, created_at, updated_at
 FROM orgs

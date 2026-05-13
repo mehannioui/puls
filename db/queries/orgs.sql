@@ -8,6 +8,11 @@ SELECT id, slug, name, plan, stripe_customer_id, created_at, updated_at
 FROM orgs
 WHERE slug = @slug;
 
+-- name: GetOrgByID :one
+SELECT id, slug, name, plan, stripe_customer_id, created_at, updated_at
+FROM orgs
+WHERE id = @id;
+
 -- name: GetOrgsForUser :many
 SELECT o.id, o.slug, o.name, o.plan, o.stripe_customer_id, o.created_at, o.updated_at
 FROM orgs o

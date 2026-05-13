@@ -11,6 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
+const countServices = `-- name: CountServices :one
+SELECT COUNT(*) FROM services WHERE org_id = $1
+`
+
+func (q *Queries) CountServices(ctx context.Context, orgID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countServices, orgID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createService = `-- name: CreateService :one
 INSERT INTO services (org_id, name, url, method, expected_status, interval_seconds, timeout_seconds)
 VALUES ($1, $2, $3, $4, $5, $6, $7)

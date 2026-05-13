@@ -30,6 +30,9 @@ RETURNING id, org_id, name, url, method, expected_status, interval_seconds, time
 DELETE FROM services
 WHERE id = @id AND org_id = @org_id;
 
+-- name: CountServices :one
+SELECT COUNT(*) FROM services WHERE org_id = @org_id;
+
 -- name: ListActiveServices :many
 -- used by worker (service role) — no org_id filter intentional
 SELECT id, org_id, name, url, method, expected_status, interval_seconds, timeout_seconds, is_active, created_at, updated_at
