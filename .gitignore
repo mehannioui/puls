@@ -1,0 +1,24 @@
+# Go
+tmp/
+*.exe
+*.test
+*.out
+
+# Env
+.env
+.env.local
+
+# Node
+web/node_modules/
+web/.nuxt/
+web/.output/
+web/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
