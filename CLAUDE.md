@@ -1,30 +1,29 @@
-# ShipFast — Claude Code Context
+# Pulse — Claude Code Context
 
 ## What this project is
-ShipFast is an AI-native development service SaaS. Clients submit their legacy codebase,
-and an AI pipeline (powered by Claude API) rebuilds it in 30 days: full test coverage,
-design system, component library, Storybook docs, and analytics parity.
+Pulse is an uptime monitoring + hosted status page SaaS for indie hackers and small
+teams. Customers add HTTP services to monitor; we ping them on a schedule, store
+results, render a public status page at `<slug>.pulse.io`, and alert on failures.
 
-This file is your single source of truth. Read it before touching anything.
-Full architecture decisions are in docs/architecture.md — do not re-derive them.
+This file is the single source of truth. Read it before touching anything.
+Detail lives elsewhere — read those files only when relevant to your task.
+
+> The product name and Go module path are both **Pulse** (`github.com/mehannioui/pulse`).
 
 ---
 
 ## Stack
 | Layer      | Technology                          |
 |------------|-------------------------------------|
-| Frontend   | Nuxt 3 (Vue 3, App Router) — Vercel |
+| Frontend   | Nuxt 4 (Vue 3) — Vercel             |
 | Backend    | Go 1.23 — Fly.io                    |
 | Database   | PostgreSQL via Supabase             |
 | Auth       | Supabase Auth (JWT)                 |
-| Storage    | Supabase Storage                    |
-| Realtime   | Supabase Realtime                   |
-| Queue      | River (Postgres-backed job queue)   |
-| Cache      | Upstash Redis (cache + rate limit)  |
+| Queue      | River (Postgres-backed)             |
+| Cache      | Upstash Redis                       |
 | Payments   | Stripe                              |
 | Email      | Resend                              |
 | Errors     | Sentry                              |
-| Analytics  | PostHog                             |
 | CI/CD      | GitHub Actions                      |
 
 ---
@@ -32,113 +31,110 @@ Full architecture decisions are in docs/architecture.md — do not re-derive the
 ## Directory structure
 ```
 shipfast/
-├── CLAUDE.md                  ← you are here
-├── Makefile                   ← all runnable commands
-├── .env.example               ← every required env var documented
-├── docker-compose.yml         ← local Postgres + Redis
+├── CLAUDE.md
+├── Makefile               ← all runnable commands
+├── docker-compose.yml     ← local Postgres + Redis
 │
 ├── cmd/
-│   ├── api/main.go            ← HTTP server entrypoint
-│   └── worker/main.go         ← River worker entrypoint
+│   ├── api/main.go        ← HTTP server entrypoint
+│   └── worker/main.go     ← River worker entrypoint
 │
 ├── internal/
-│   ├── auth/                  ← auth middleware, JWT validation
-│   ├── projects/              ← project CRUD, status management
-│   ├── billing/               ← Stripe integration
-│   ├── pipeline/              ← AI pipeline job implementations
-│   ├── storage/               ← Supabase Storage client
-│   ├── notify/                ← Resend email + in-app notifications
-│   └── server/                ← chi router setup, middleware wiring
+│   ├── server/            ← chi router, middleware
+│   ├── auth/              ← JWT validation, org context
+│   ├── orgs/              ← org + membership CRUD
+│   ├── services/          ← monitored services CRUD
+│   ├── checks/            ← check engine + results
+│   ├── incidents/         ← incident management
+│   ├── billing/           ← Stripe
+│   ├── notify/            ← Resend email
+│   └── storage/           ← Supabase Storage
 │
 ├── db/
-│   ├── migrations/            ← sequential SQL migration files
-│   └── queries/               ← sqlc .sql query files → generated Go
+│   ├── migrations/        ← goose SQL migrations
+│   ├── queries/           ← sqlc .sql files
+│   └── sqlc/              ← generated Go (do not edit)
 │
-├── web/                       ← Nuxt 3 app
-│   ├── pages/
-│   ├── components/
-│   ├── composables/
-│   └── stores/
+├── web/                   ← Nuxt 4 app
+│   └── app/
+│       ├── pages/
+│       ├── components/
+│       ├── composables/
+│       └── stores/
 │
-├── docs/                      ← architecture decisions (read before each task)
-├── tasks/                     ← one task file per Claude Code session
-└── conventions/               ← code style rules per layer
+├── docs/architecture.md   ← decision rationale (read when relevant)
+├── tasks/                 ← one task file per session, with acceptance criteria
+└── conventions/           ← style rules per layer (read for that layer's work)
 ```
 
 ---
 
-## Commands — always use these to verify your work
+## Commands
 ```bash
-make dev          # start Go API + Nuxt locally (requires docker-compose up)
-make test         # go test ./... + vitest run
-make test-go      # go test ./... -v -race
-make test-web     # cd web && npx vitest run
-make build        # go build ./cmd/api ./cmd/worker
-make migrate      # apply pending migrations via goose
-make sqlc         # regenerate Go code from db/queries/*.sql
+make dev          # API + worker locally
+make test         # go test + vitest
+make build        # build Go binaries
+make migrate      # apply DB migrations
+make sqlc         # regen Go from db/queries/
 make lint         # golangci-lint + eslint
-make docker-up    # start local Postgres + Redis
+make docker-up    # local Postgres + Redis
+make help         # show all targets
 ```
 
 ---
 
-## DO NOT — non-negotiable rules
-- **No ORM.** Use sqlc + raw SQL only. See conventions/sql.md.
-- **No new Go dependencies** without asking first. Check if stdlib covers it.
-- **No touching files that already pass tests** unless the task explicitly says so.
-- **No global mutable state** in Go packages. Pass dependencies explicitly.
-- **No secrets in web/.** All API calls go through Go backend.
+## DO NOT
+- **No ORM.** sqlc + raw SQL only. See conventions/sql.md.
+- **No new Go deps** without asking. Check stdlib first.
+- **No global mutable state.** Pass dependencies explicitly.
 - **No `any` type in Go** without a comment explaining why.
-- **No direct Supabase DB calls from Nuxt.** All data flows through Go API, except Realtime subscriptions.
-- **Do not run `go mod tidy` without checking** what it removes.
+- **No secrets in `web/`.** All third-party API calls go through the Go backend.
+- **No direct Supabase DB calls from Nuxt.** Only Auth + Realtime subscriptions.
+- **Never query across tenants.** Every table has `org_id`; RLS enforces it.
 
 ---
 
-## Conventions (read the relevant file before each task)
-- Go patterns → conventions/go.md
-- Vue/Nuxt patterns → conventions/vue.md
-- SQL patterns → conventions/sql.md
-- Testing patterns → conventions/testing.md
+## Conventions (read the relevant file for the layer you're touching)
+- Go → conventions/go.md
+- Vue/Nuxt → conventions/vue.md
+- SQL → conventions/sql.md
+- Tests → conventions/testing.md
 
 ---
 
-## Key architecture decisions (don't re-derive)
-1. **River over Celery** — Go-native, Postgres-backed, no extra broker service.
-2. **sqlc over GORM** — type-safe, explicit, no magic, easier to debug.
-3. **Supabase Auth over Clerk** — already in stack, free tier, good enough for now.
-4. **Supabase Realtime for job progress** — no custom WebSocket server needed.
-5. **Modular monolith** — no microservices until justified by real load.
-6. **Row Level Security on all tables** — multi-tenancy enforced at DB level.
-7. Full rationale in docs/architecture.md.
+## Key architecture decisions (don't re-derive — full rationale in docs/architecture.md)
+1. **River for check scheduling** — Postgres-backed, handles retries + leader election.
+2. **Plain Postgres for check_results** — no TimescaleDB v1; aggregation table for old data.
+3. **SSE for real-time dashboard** — simpler than WebSockets, one-way fits the use case.
+4. **SSG for public status pages** — regenerated on incident change via Vercel hooks.
+5. **Wildcard subdomain routing** — `*.pulse.io` resolved by Nuxt middleware to tenant.
+6. **sqlc over ORM** — type-safe, explicit, debuggable.
+7. **Supabase Auth over Clerk** — already in stack, free tier sufficient.
+8. **RLS on every table** — multi-tenancy enforced at DB level; service role bypass for worker.
+9. **Modular monolith** — `cmd/api` + `cmd/worker`, no microservices.
 
 ---
 
-## Environment variables (see .env.example for full list)
-```
-SUPABASE_URL
-SUPABASE_SERVICE_ROLE_KEY
-SUPABASE_JWT_SECRET
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
-ANTHROPIC_API_KEY
-RESEND_API_KEY
-SENTRY_DSN
-UPSTASH_REDIS_URL
-UPSTASH_REDIS_TOKEN
-DATABASE_URL
-PORT (default: 8080)
-```
+## Pricing tiers (drives feature flags)
+- **Free** — 3 services, 5-min interval, 7 days history, 1 status page
+- **Pro ($19/mo)** — 50 services, 1-min interval, 90 days history, 5 team members
 
 ---
 
-## Multi-tenancy model
-Every table has `org_id uuid NOT NULL` (the tenant identifier).
-RLS policies on every table enforce: `org_id = auth.jwt() ->> 'org_id'`.
-The Go service role bypasses RLS for worker jobs only.
-Never query across tenants. Never skip `org_id` in inserts.
+## Multi-tenancy
+Every table has `org_id uuid NOT NULL`.
+RLS: `org_id = (auth.jwt() ->> 'org_id')::uuid` on all tables.
+Worker uses service role (bypasses RLS) — must pass `org_id` explicitly in every insert.
 
 ---
 
-## Current project status
-Track what is done vs pending in tasks/STATUS.md.
-Check it before starting any session so you don't redo completed work.
+## Environment variables
+See `.env.example` for the full list. Required:
+`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`,
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `SENTRY_DSN`,
+`UPSTASH_REDIS_URL`, `UPSTASH_REDIS_TOKEN`, `PORT`.
+
+---
+
+## Current status
+See `tasks/STATUS.md` at session start. Don't redo completed tasks.
