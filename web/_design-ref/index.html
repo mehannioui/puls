@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Pulse — Design System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="primitives.jsx"></script>
+  <script type="text/babel" src="tokens.jsx"></script>
+  <script type="text/babel" src="component-specs.jsx"></script>
+  <script type="text/babel" src="pages-app.jsx"></script>
+  <script type="text/babel" src="pages-public.jsx"></script>
+  <script type="text/babel" src="pages-extras.jsx"></script>
+  <script type="text/babel" src="pages-mobile.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const App = () => (
+      <DesignCanvas>
+        <DCSection
+          id="intro"
+          title="Pulse — Design System"
+          subtitle="Dark-first uptime monitoring. Geist sans + mono. One brand accent (operational green). Components built for Nuxt UI v3 / Tailwind."
+        >
+          <DCArtboard id="color"  label="Color tokens" width={760} height={620}><ColorTokensArtboard/></DCArtboard>
+          <DCArtboard id="type"   label="Type scale"   width={760} height={620}><TypeTokensArtboard/></DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="components"
+          title="Components"
+          subtitle="Status badge · 90-day uptime bar · metric card · incident timeline · live waveform. The five primitives used across every Pulse surface."
+        >
+          <DCArtboard id="badge"     label="Status badge"      width={560} height={520}><BadgeSpecArtboard/></DCArtboard>
+          <DCArtboard id="uptime"    label="Uptime bar"        width={620} height={520}><UptimeSpecArtboard/></DCArtboard>
+          <DCArtboard id="metric"    label="Metric card"       width={620} height={520}><MetricCardSpecArtboard/></DCArtboard>
+          <DCArtboard id="timeline"  label="Incident timeline" width={620} height={520}><TimelineSpecArtboard/></DCArtboard>
+          <DCArtboard id="wave"      label="Live waveform"     width={620} height={620}><WaveSpecArtboard/></DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="app-pages"
+          title="App pages"
+          subtitle="The signed-in product surface. Steady-state → detail → incident war-room → routing → onboarding."
+        >
+          <DCArtboard id="dashboard"    label="01 · Dashboard"          width={1280} height={820}><DashboardArtboard/></DCArtboard>
+          <DCArtboard id="detail"       label="02 · Service detail"     width={1280} height={820}><ServiceDetailArtboard/></DCArtboard>
+          <DCArtboard id="warroom"      label="03 · Incident war-room"  width={1280} height={900}><WarRoomArtboard/></DCArtboard>
+          <DCArtboard id="integrations" label="04 · Integrations"       width={1280} height={820}><IntegrationsArtboard/></DCArtboard>
+          <DCArtboard id="onboard"      label="05 · Add first monitor"  width={560}  height={720}><OnboardingArtboard/></DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="public"
+          title="Public surfaces"
+          subtitle="Marketing landing and the customer-facing status page on a custom subdomain. Both use the same tokens."
+        >
+          <DCArtboard id="landing" label="06 · Marketing landing"  width={1280} height={1520}><LandingArtboard/></DCArtboard>
+          <DCArtboard id="status"  label="07 · Public status page" width={1280} height={1400}><StatusPageArtboard/></DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="mobile"
+          title="Mobile"
+          subtitle="Pulse on the phone. The job is twofold: (1) glance at services on the go, (2) handle the 3am page. The lock-screen + war-room pair is the screen that justifies the product."
+        >
+          <DCArtboard id="m-lock"   label="08 · Lock-screen page"      width={440} height={910}>
+            <div style={{ display: 'grid', placeItems: 'center', height: '100%', background: '#1a1a1f', padding: 12 }}>
+              <IOSDevice dark><MobileLockScreen/></IOSDevice>
+            </div>
+          </DCArtboard>
+          <DCArtboard id="m-war"    label="09 · War-room · mobile"     width={440} height={910}>
+            <div style={{ display: 'grid', placeItems: 'center', height: '100%', background: '#1a1a1f', padding: 12 }}>
+              <IOSDevice dark><MobileWarRoom/></IOSDevice>
+            </div>
+          </DCArtboard>
+          <DCArtboard id="m-dash"   label="10 · Dashboard · mobile"    width={440} height={910}>
+            <div style={{ display: 'grid', placeItems: 'center', height: '100%', background: '#1a1a1f', padding: 12 }}>
+              <IOSDevice dark><MobileDashboard/></IOSDevice>
+            </div>
+          </DCArtboard>
+          <DCArtboard id="m-detail" label="11 · Service detail · mobile" width={440} height={910}>
+            <div style={{ display: 'grid', placeItems: 'center', height: '100%', background: '#1a1a1f', padding: 12 }}>
+              <IOSDevice dark><MobileServiceDetail/></IOSDevice>
+            </div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
