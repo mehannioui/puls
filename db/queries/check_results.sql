@@ -24,3 +24,9 @@ WHERE service_id = @service_id
 -- name: PruneOldResults :exec
 DELETE FROM check_results
 WHERE org_id = @org_id AND checked_at < @before;
+
+-- name: GetLastCheckTimes :many
+-- returns the most recent check time per service, used by the scheduler
+SELECT DISTINCT ON (service_id) service_id, checked_at AS last_checked_at
+FROM check_results
+ORDER BY service_id, checked_at DESC;

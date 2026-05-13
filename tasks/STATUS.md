@@ -12,7 +12,7 @@ Update at the end of every session. Check at the start before opening a task fil
 | 02 | Database schema               | ✅ done     | 5 migrations, sqlc gen, RLS integration test |
 | 03 | Auth + orgs                   | ✅ done     | JWT middleware, orgs CRUD, Nuxt auth flow, Auth Hook docs |
 | 04 | Services CRUD + dashboard     | ✅ done     | CRUD API + plan enforcement + Nuxt dashboard/forms |
-| 05 | Check engine (worker)         | ⬜ pending  | River jobs, HTTP checks        |
+| 05 | Check engine (worker)         | ✅ done     | River v0.37, scheduler, HTTP client, 2 integration tests |
 | 06 | Public status page (SSG)      | ⬜ pending  | Subdomain routing              |
 | 07 | Real-time dashboard (SSE)     | ⬜ pending  | Live updates + charts          |
 | 08 | Stripe billing                | ⬜ pending  | Free vs Pro tier enforcement   |

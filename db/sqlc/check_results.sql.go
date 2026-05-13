@@ -13,6 +13,41 @@ import (
 	"github.com/google/uuid"
 )
 
+const getLastCheckTimes = `-- name: GetLastCheckTimes :many
+SELECT DISTINCT ON (service_id) service_id, checked_at AS last_checked_at
+FROM check_results
+ORDER BY service_id, checked_at DESC
+`
+
+type GetLastCheckTimesRow struct {
+	ServiceID     uuid.UUID `json:"service_id"`
+	LastCheckedAt time.Time `json:"last_checked_at"`
+}
+
+// returns the most recent check time per service, used by the scheduler
+func (q *Queries) GetLastCheckTimes(ctx context.Context) ([]GetLastCheckTimesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLastCheckTimes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLastCheckTimesRow
+	for rows.Next() {
+		var i GetLastCheckTimesRow
+		if err := rows.Scan(&i.ServiceID, &i.LastCheckedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRecentResults = `-- name: GetRecentResults :many
 SELECT id, service_id, org_id, checked_at, ok, status_code, response_ms, error
 FROM check_results
