@@ -18,3 +18,17 @@ WHERE om.user_id = @user_id;
 UPDATE orgs
 SET plan = @plan
 WHERE id = @org_id;
+
+-- name: AddOrgMember :exec
+INSERT INTO org_members (org_id, user_id, role, is_default)
+VALUES (@org_id, @user_id, @role, @is_default);
+
+-- name: SetDefaultOrg :exec
+UPDATE org_members
+SET is_default = (org_id = @org_id)
+WHERE user_id = @user_id;
+
+-- name: IsMember :one
+SELECT EXISTS(
+    SELECT 1 FROM org_members WHERE org_id = @org_id AND user_id = @user_id
+) AS is_member;

@@ -11,6 +11,28 @@ import (
 	"github.com/google/uuid"
 )
 
+const addOrgMember = `-- name: AddOrgMember :exec
+INSERT INTO org_members (org_id, user_id, role, is_default)
+VALUES ($1, $2, $3, $4)
+`
+
+type AddOrgMemberParams struct {
+	OrgID     uuid.UUID `json:"org_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Role      string    `json:"role"`
+	IsDefault bool      `json:"is_default"`
+}
+
+func (q *Queries) AddOrgMember(ctx context.Context, arg AddOrgMemberParams) error {
+	_, err := q.db.ExecContext(ctx, addOrgMember,
+		arg.OrgID,
+		arg.UserID,
+		arg.Role,
+		arg.IsDefault,
+	)
+	return err
+}
+
 const createOrg = `-- name: CreateOrg :one
 INSERT INTO orgs (slug, name, plan)
 VALUES ($1, $2, $3)
@@ -95,6 +117,40 @@ func (q *Queries) GetOrgsForUser(ctx context.Context, userID uuid.UUID) ([]Org, 
 		return nil, err
 	}
 	return items, nil
+}
+
+const isMember = `-- name: IsMember :one
+SELECT EXISTS(
+    SELECT 1 FROM org_members WHERE org_id = $1 AND user_id = $2
+) AS is_member
+`
+
+type IsMemberParams struct {
+	OrgID  uuid.UUID `json:"org_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) IsMember(ctx context.Context, arg IsMemberParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isMember, arg.OrgID, arg.UserID)
+	var is_member bool
+	err := row.Scan(&is_member)
+	return is_member, err
+}
+
+const setDefaultOrg = `-- name: SetDefaultOrg :exec
+UPDATE org_members
+SET is_default = (org_id = $1)
+WHERE user_id = $2
+`
+
+type SetDefaultOrgParams struct {
+	OrgID  uuid.UUID `json:"org_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) SetDefaultOrg(ctx context.Context, arg SetDefaultOrgParams) error {
+	_, err := q.db.ExecContext(ctx, setDefaultOrg, arg.OrgID, arg.UserID)
+	return err
 }
 
 const updateOrgPlan = `-- name: UpdateOrgPlan :exec

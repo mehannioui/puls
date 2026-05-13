@@ -67,6 +67,7 @@ type OrgMember struct {
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	IsDefault bool      `json:"is_default"`
 }
 
 type Service struct {
