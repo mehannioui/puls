@@ -13,7 +13,7 @@ Update at the end of every session. Check at the start before opening a task fil
 | 03 | Auth + orgs                   | ✅ done     | JWT middleware, orgs CRUD, Nuxt auth flow, Auth Hook docs |
 | 04 | Services CRUD + dashboard     | ✅ done     | CRUD API + plan enforcement + Nuxt dashboard/forms |
 | 05 | Check engine (worker)         | ✅ done     | River v0.37, scheduler, HTTP client, 2 integration tests |
-| 06 | Public status page (SSG)      | ⬜ pending  | Subdomain routing              |
+| 06 | Public status page (SSG)      | ✅ done     | /public/status API, tenant middleware, ISR, StatusBar + IncidentCard |
 | 07 | Real-time dashboard (SSE)     | ⬜ pending  | Live updates + charts          |
 | 08 | Stripe billing                | ⬜ pending  | Free vs Pro tier enforcement   |
 

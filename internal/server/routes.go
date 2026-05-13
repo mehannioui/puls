@@ -20,6 +20,9 @@ func (s *Server) Routes() http.Handler {
 		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	})
 
+	// Public — no auth, rate-limited at 60 req/min per IP
+	r.Get("/public/status", s.statusHandler.GetStatus)
+
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(s.jwtSecret))
 

@@ -6,12 +6,14 @@ import (
 	sqlcdb "github.com/mehannioui/pulse/db/sqlc"
 	"github.com/mehannioui/pulse/internal/orgs"
 	"github.com/mehannioui/pulse/internal/services"
+	"github.com/mehannioui/pulse/internal/status"
 )
 
 // Server holds shared dependencies for all HTTP handlers.
 type Server struct {
 	orgsHandler     *orgs.Handler
 	servicesHandler *services.Handler
+	statusHandler   *status.Handler
 	jwtSecret       string
 }
 
@@ -23,6 +25,7 @@ func New(db *sql.DB, jwtSecret string) *Server {
 	return &Server{
 		orgsHandler:     orgs.NewHandler(orgSvc),
 		servicesHandler: services.NewHandler(svcSvc),
+		statusHandler:   status.NewHandler(q),
 		jwtSecret:       jwtSecret,
 	}
 }

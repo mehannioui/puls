@@ -23,8 +23,15 @@ export default defineNuxtConfig({
     redirect: false,
   },
   runtimeConfig: {
+    // Server-only
+    revalidateSecret: process.env.NUXT_REVALIDATE_SECRET || '',
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8080",
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080',
     },
+  },
+  // ISR: public status pages revalidate every 60s.
+  // Vercel picks this up automatically; local dev uses SWR fallback.
+  routeRules: {
+    '/': { isr: 60 },
   },
 })
