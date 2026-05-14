@@ -30,3 +30,9 @@ WHERE org_id = @org_id AND checked_at < @before;
 SELECT DISTINCT ON (service_id) service_id, checked_at AS last_checked_at
 FROM check_results
 ORDER BY service_id, checked_at DESC;
+
+-- name: GetResultsSince :many
+SELECT id, service_id, org_id, checked_at, ok, status_code, response_ms, error
+FROM check_results
+WHERE service_id = @service_id AND org_id = @org_id AND checked_at >= @since
+ORDER BY checked_at ASC;

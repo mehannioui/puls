@@ -76,7 +76,7 @@ func TestCheckWorkerWork(t *testing.T) {
 		_, _ = db.ExecContext(ctx, `TRUNCATE check_results, services, org_members, orgs CASCADE`)
 	})
 
-	worker := checks.NewCheckWorker(q, checks.NewClient(), slog.Default())
+	worker := checks.NewCheckWorker(db, checks.NewClient(), slog.Default())
 
 	job := &river.Job[checks.CheckServiceArgs]{
 		JobRow: &rivertype.JobRow{
@@ -168,7 +168,7 @@ func TestCheckWorkerWorkFailure(t *testing.T) {
 		_, _ = db.ExecContext(ctx, `TRUNCATE check_results, services, org_members, orgs CASCADE`)
 	})
 
-	worker := checks.NewCheckWorker(q, checks.NewClient(), slog.Default())
+	worker := checks.NewCheckWorker(db, checks.NewClient(), slog.Default())
 
 	job := &river.Job[checks.CheckServiceArgs]{
 		JobRow: &rivertype.JobRow{

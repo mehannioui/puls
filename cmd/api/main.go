@@ -12,8 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
+	"github.com/mehannioui/pulse/internal/checks"
 	"github.com/mehannioui/pulse/internal/server"
 )
 
@@ -43,12 +44,20 @@ func main() {
 	}
 	slog.Info("database connected")
 
+	hub := checks.NewHub()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// Postgres LISTEN/NOTIFY bridges worker→API for real-time SSE fan-out.
+	go checks.RunListener(ctx, dbURL, hub, slog.Default())
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	srv := server.New(db, jwtSecret)
+	srv := server.New(db, jwtSecret, hub)
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
@@ -62,13 +71,11 @@ func main() {
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	<-ctx.Done()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := httpServer.Shutdown(ctx); err != nil {
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("shutdown error: %v", err)
 	}
 	slog.Info("api stopped")

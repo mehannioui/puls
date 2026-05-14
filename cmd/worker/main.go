@@ -58,7 +58,7 @@ func main() {
 	}
 	slog.Info("river migrations applied")
 
-	// sql.DB backed by the same pool, for sqlc queries.
+	// sql.DB backed by the same pool, for sqlc queries and pg_notify.
 	sqlDB := sql.OpenDB(stdlib.GetPoolConnector(pool))
 	defer sqlDB.Close()
 
@@ -66,7 +66,7 @@ func main() {
 	httpClient := checks.NewClient()
 
 	workers := river.NewWorkers()
-	checkWorker := checks.NewCheckWorker(q, httpClient, slog.Default())
+	checkWorker := checks.NewCheckWorker(sqlDB, httpClient, slog.Default())
 	river.AddWorker(workers, checkWorker)
 
 	riverClient, err := river.NewClient(riverpgxv5.New(pool), &river.Config{

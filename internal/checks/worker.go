@@ -2,13 +2,13 @@ package checks
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"sync/atomic"
 
 	"github.com/google/uuid"
 	"github.com/riverqueue/river"
-	sqlcdb "github.com/mehannioui/pulse/db/sqlc"
 )
 
 // CheckServiceArgs are the arguments for a check_service River job.
@@ -30,17 +30,15 @@ type CheckWorker struct {
 }
 
 // NewCheckWorker creates a CheckWorker wired to the given dependencies.
-func NewCheckWorker(q *sqlcdb.Queries, client *Client, logger *slog.Logger) *CheckWorker {
+func NewCheckWorker(db *sql.DB, client *Client, logger *slog.Logger) *CheckWorker {
 	return &CheckWorker{
-		repo:   newRepo(q),
+		repo:   newRepoWithDB(db),
 		client: client,
 		logger: logger,
 	}
 }
 
-// Work fetches the service, runs an HTTP check, records the result.
-// Returning a non-nil error causes River to retry the job — we never retry
-// here since each run is a single check attempt.
+// Work fetches the service, runs an HTTP check, records the result, and notifies listeners.
 func (w *CheckWorker) Work(ctx context.Context, job *river.Job[CheckServiceArgs]) error {
 	args := job.Args
 
@@ -75,8 +73,20 @@ func (w *CheckWorker) Work(ctx context.Context, job *river.Job[CheckServiceArgs]
 		)
 	}
 
-	if err := w.repo.insertCheckResult(ctx, args.ServiceID, args.OrgID, result); err != nil {
+	checkedAt, err := w.repo.insertCheckResult(ctx, args.ServiceID, args.OrgID, result)
+	if err != nil {
 		return fmt.Errorf("inserting check result for service %s: %w", args.ServiceID, err)
+	}
+
+	if err := w.repo.notifyResult(ctx, Event{
+		ServiceID:  args.ServiceID,
+		OrgID:      args.OrgID,
+		OK:         result.OK,
+		StatusCode: result.StatusCode,
+		ResponseMS: result.ResponseMS,
+		CheckedAt:  checkedAt,
+	}); err != nil {
+		w.logger.Warn("pg_notify failed", "error", err)
 	}
 
 	w.logger.Info("check complete",

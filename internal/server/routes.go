@@ -23,6 +23,9 @@ func (s *Server) Routes() http.Handler {
 	// Public — no auth, rate-limited at 60 req/min per IP
 	r.Get("/public/status", s.statusHandler.GetStatus)
 
+	// SSE stream — auth via ?token= query param (EventSource can't set headers)
+	r.Get("/api/stream", s.checksHandler.Stream)
+
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(s.jwtSecret))
 
@@ -35,6 +38,8 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/api/services/{id}", s.servicesHandler.GetService)
 		r.Patch("/api/services/{id}", s.servicesHandler.UpdateService)
 		r.Delete("/api/services/{id}", s.servicesHandler.DeleteService)
+
+		r.Get("/api/services/{id}/results", s.checksHandler.ListResults)
 	})
 
 	return r

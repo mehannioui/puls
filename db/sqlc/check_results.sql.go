@@ -162,3 +162,48 @@ func (q *Queries) PruneOldResults(ctx context.Context, arg PruneOldResultsParams
 	_, err := q.db.ExecContext(ctx, pruneOldResults, arg.OrgID, arg.Before)
 	return err
 }
+
+const getResultsSince = `-- name: GetResultsSince :many
+SELECT id, service_id, org_id, checked_at, ok, status_code, response_ms, error
+FROM check_results
+WHERE service_id = $1 AND org_id = $2 AND checked_at >= $3
+ORDER BY checked_at ASC
+`
+
+type GetResultsSinceParams struct {
+	ServiceID uuid.UUID `json:"service_id"`
+	OrgID     uuid.UUID `json:"org_id"`
+	Since     time.Time `json:"since"`
+}
+
+func (q *Queries) GetResultsSince(ctx context.Context, arg GetResultsSinceParams) ([]CheckResult, error) {
+	rows, err := q.db.QueryContext(ctx, getResultsSince, arg.ServiceID, arg.OrgID, arg.Since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CheckResult
+	for rows.Next() {
+		var i CheckResult
+		if err := rows.Scan(
+			&i.ID,
+			&i.ServiceID,
+			&i.OrgID,
+			&i.CheckedAt,
+			&i.Ok,
+			&i.StatusCode,
+			&i.ResponseMs,
+			&i.Error,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

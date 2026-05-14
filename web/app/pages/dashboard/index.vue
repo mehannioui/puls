@@ -1,15 +1,37 @@
 <script setup lang="ts">
 import type { Service } from "~/composables/api/useServices";
+import type { ResultResponse } from "~/composables/useStatusStream";
 
 definePageMeta({ middleware: "auth" });
 
+const api = useApi();
 const { list, remove } = useServices();
+const { latest, sparklines, init } = useStatusStream();
 
 const { data: services, refresh, error } = useAsyncData<Service[]>(
   "services",
   () => list(),
   { default: () => [] }
 );
+
+// Pre-fetch last 60 results per service to seed status dots + sparklines.
+const { data: initialResults } = useAsyncData<Record<string, ResultResponse[]>>(
+  "services-initial-results",
+  async () => {
+    if (!services.value?.length) return {}
+    const pairs = await Promise.all(
+      services.value.map(svc =>
+        api<ResultResponse[]>(`/api/services/${svc.id}/results`)
+          .then(r => [svc.id, r] as [string, ResultResponse[]])
+          .catch(() => [svc.id, []] as [string, ResultResponse[]])
+      )
+    )
+    return Object.fromEntries(pairs)
+  },
+  { watch: [services], default: () => ({}) }
+);
+
+watch(initialResults, r => { if (r) init(r) }, { immediate: true })
 
 const deleting = ref<string | null>(null);
 const deleteError = ref("");
@@ -30,6 +52,30 @@ async function handleDelete(id: string) {
 function intervalLabel(seconds: number) {
   if (seconds < 60) return `${seconds}s`;
   return `${seconds / 60}m`;
+}
+
+function statusDotClass(serviceId: string) {
+  const event = latest[serviceId];
+  if (!event) return "bg-gray-300";
+  return event.ok ? "bg-green-500" : "bg-red-500";
+}
+
+function statusLabel(serviceId: string) {
+  const event = latest[serviceId];
+  if (!event) return "—";
+  return event.ok ? "OK" : "Down";
+}
+
+function statusTextClass(serviceId: string) {
+  const event = latest[serviceId];
+  if (!event) return "text-gray-400";
+  return event.ok ? "text-green-700" : "text-red-700";
+}
+
+function lastResponseMs(serviceId: string): string {
+  const event = latest[serviceId];
+  if (!event || !event.response_ms) return "—";
+  return `${event.response_ms}ms`;
 }
 </script>
 
@@ -57,19 +103,36 @@ function intervalLabel(seconds: number) {
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">URL</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Interval</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Response</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Last 60 checks</th>
               <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
             <tr v-for="svc in services" :key="svc.id">
-              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{{ svc.name }}</td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <NuxtLink :to="`/dashboard/services/${svc.id}`" class="hover:text-indigo-600">
+                  {{ svc.name }}
+                </NuxtLink>
+              </td>
               <td class="max-w-xs truncate px-6 py-4 text-sm text-gray-500">{{ svc.url }}</td>
               <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ intervalLabel(svc.interval_seconds) }}</td>
               <td class="whitespace-nowrap px-6 py-4">
-                <span class="inline-flex items-center gap-1.5 text-sm text-green-700">
-                  <span class="h-2 w-2 rounded-full bg-green-500" />
-                  OK
+                <span :class="['inline-flex items-center gap-1.5 text-sm', statusTextClass(svc.id)]">
+                  <span :class="['h-2 w-2 rounded-full', statusDotClass(svc.id)]" />
+                  {{ statusLabel(svc.id) }}
                 </span>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 tabular-nums">
+                {{ lastResponseMs(svc.id) }}
+              </td>
+              <td class="px-6 py-4">
+                <PulseSparkline
+                  :data="sparklines[svc.id]"
+                  :width="96"
+                  :height="24"
+                  :color="latest[svc.id]?.ok === false ? 'var(--status-outage, #ef4444)' : 'var(--pulse-brand, #6366f1)'"
+                />
               </td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
                 <NuxtLink
